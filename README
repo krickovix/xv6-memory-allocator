@@ -2,6 +2,37 @@ xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix
 Version 6 (v6).  xv6 loosely follows the structure and style of v6,
 but is implemented for a modern RISC-V multiprocessor using ANSI C.
 
+_______________________________________________________________________
+
+CUSTOM MEMORY ALLOCATOR EXTENSION
+
+This repository contains a modified version of the xv6 operating system
+extended with a custom kernel memory allocator.
+
+The project implements a slab allocator backed by a buddy allocator to
+support efficient object allocation and memory block management within
+the xv6 kernel.
+
+KEY FEATURES
+
+- Slab allocator for small-object caching
+- Buddy allocator for physical memory block management
+- Thread-safe allocation mechanisms
+- Integration with xv6 kernel subsystems
+- Custom system calls exposing allocator functionality
+
+FILES ADDED
+
+The following files were added as part of the custom memory allocator implementation:
+
+- `kernel/slab.c` - implementation of the slab allocator
+- `kernel/slab.h` - slab allocator interface and data structures
+- `kernel/buddy.c` - buddy allocator implementation
+- `kernel/buddy.h` - buddy allocator data structures and API
+- `user/main.c` - tests
+
+_______________________________________________________________________
+
 ACKNOWLEDGMENTS
 
 xv6 is inspired by John Lions's Commentary on UNIX 6th Edition (Peer
