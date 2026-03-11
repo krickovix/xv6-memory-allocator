@@ -50,16 +50,14 @@ void work(void* pdata) {
     int object_size = data.id + 1;
     kmem_cache_t *cache = kmem_cache_create(CACHE_NAMES[data.id], object_size, 0, 0);
 
-    ////printf("kmalloc size: %d\n", (int)sizeof(struct objects_s)*data.iterations);
     struct objects_s *objs = (struct objects_s*)(kmalloc(sizeof(struct objects_s) * data.iterations));
 
     for (int i = 0; i < data.iterations; i++) {
-        ////printf("i: %d\n", i);
         if (i % 100 == 0) {
             objs[size].data = kmem_cache_alloc(data.shared);
             objs[size].cache = data.shared;
             if (!check(objs[size].data, shared_size)) {
-                //printf("Value not correct!");
+                printf("Value not correct!");
             }
         }
         else {
@@ -67,7 +65,6 @@ void work(void* pdata) {
             objs[size].cache = cache;
             memset(objs[size].data, MASK, object_size);
         }
-        //kmem_cache_info(cache);
         size++;
     }
 
@@ -82,10 +79,7 @@ void work(void* pdata) {
     }
 
     kfree(objs);
-    ////printf("before destroy: shared name = %s\n",       data.shared->name);
-    //printf("work: destroying cache %s\n", cache->name);
     kmem_cache_destroy(cache);
-    ////printf("after destroy: shared name = %s\n",       data.shared->name);
 }
 
 
@@ -104,7 +98,6 @@ void main() {
     void* space = sbrk(num_of_blocks * BLOCK_SIZE);
     kmem_init(space, num_of_blocks);
     kmem_cache_t *shared = kmem_cache_create("shared object", shared_size, construct, 0);
-    ////printf("shared cache at: %p\n", shared);
     
     struct data_s data;
     data.shared = shared;
@@ -112,9 +105,7 @@ void main() {
 
     runs(work, &data, RUN_NUM);
 
-    ////printf("before destroy\n");
     kmem_cache_destroy(shared);
-    ////printf("after destroy\n");
-    //free(space);
+    free(space);
     exit(0);
 }
