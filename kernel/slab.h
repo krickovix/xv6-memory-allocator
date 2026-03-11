@@ -17,7 +17,7 @@ typedef struct kmem_cache_s
 {
     char name[CACHE_NAME_MAX];
 
-    size_t obj_size; // [bytes]
+    size_t obj_size; 
     size_t aligned_size; // obj_size + size of obj header
     uint slab_block_num;
     uint max_objs_per_slab;

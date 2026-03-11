@@ -21,7 +21,7 @@ struct kmem_slab_s
 {
     void* mem;
 
-    size_t obj_size; // [bytes]
+    size_t obj_size;
     kmem_slab_obj_t* free_list;
 
     uint obj_num;
@@ -103,12 +103,10 @@ void* slab_add_obj(kmem_slab_t* slab, kmem_cache_t *cachep)
     if (!slab)
     {
         cachep->error_flags = ALLOC_ERROR;
-        //panic("slab_add_obj: slab does not exist");
         return 0;
     }
     if(!slab->free_list || slab->obj_num == cachep->max_objs_per_slab){
         cachep->error_flags = ALLOC_ERROR;
-        //panic("slab_add_obj: adding obj to full slab");
         return 0;
     }
 
@@ -125,7 +123,6 @@ void slab_remove_obj(kmem_slab_t* slab, kmem_cache_t *cachep, kmem_slab_obj_t *o
 {
     if(slab->obj_num == 0){
         cachep->error_flags = FREE_ERROR;
-        //panic("slab_add_obj: removing obj from free slab");
         return;
     }
 
@@ -200,8 +197,6 @@ kmem_cache_t *kmem_cache_create(const char *name, size_t size, void (*ctor)(void
     kmem_cache_t *cachep = buddy_alloc(1);
     if (!cachep)
         return 0;
-
-    //printf("cache created at: %p\n", cachep);
 
     memset(cachep, 0, sizeof(kmem_cache_t));
 
@@ -305,7 +300,6 @@ void* kmem_cache_alloc(kmem_cache_t *cachep)
     if(!picked_slab){
         cachep->error_flags = ALLOC_ERROR;
         release(&cachep->lock);
-        //panic("kmem_cache_alloc: error picking slab");
         return 0;
     }
 
@@ -313,7 +307,6 @@ void* kmem_cache_alloc(kmem_cache_t *cachep)
     if(!obj_addr){
         cachep->error_flags = ALLOC_ERROR;
         release(&cachep->lock);
-        //panic("kmem_cache_alloc: slab full");
         return 0;
     }
 
@@ -335,7 +328,6 @@ void kmem_cache_free(kmem_cache_t *cachep, void *objp) {
     if (!slab){
         cachep->error_flags = FREE_ERROR;
         release(&cachep->lock);
-        //panic("kmem_cache_alloc: obj not belonging to any slab");
         return;
     }
 
@@ -356,17 +348,8 @@ void kmem_cache_free(kmem_cache_t *cachep, void *objp) {
 
 void *kmalloc(size_t size){
 
-    if(allocator_initialized == FALSE)
-    {
-        //panic("kmalloc: allocator not initialized");
-        return 0;
-    }
-
-    if (size < MIN_BUFFER_SIZE || size > MAX_BUFFER_SIZE)
-    {
-        //panic("kmalloc: buffer size not between 2^5-2^17");
-        return 0;
-    }
+    if(allocator_initialized == FALSE) return 0;
+    if (size < MIN_BUFFER_SIZE || size > MAX_BUFFER_SIZE) return 0;
 
     size_t rounded_size = MIN_BUFFER_SIZE;
     int index = 0;
@@ -427,9 +410,7 @@ void kmem_cache_destroy(kmem_cache_t *cachep)
     if (!cachep || cachep->valid_cache == FALSE)
         return;
 
-    //printf("destroy: acquiring lock\n");
     acquire(&cachep->lock);
-    //printf("destroy: freeing free_slabs\n");
 
     kmem_slab_t *slab;
     while(cachep->free_slabs){
@@ -438,27 +419,22 @@ void kmem_cache_destroy(kmem_cache_t *cachep)
         slab_destroy_objs(slab, cachep);
         buddy_free(slab, slab->block_num);
     }
-    //printf("destroy: freeing partial_slabs\n");
+
     while(cachep->partial_slabs){
         slab = cachep->partial_slabs;
         remove_slab_from(&cachep->partial_slabs, slab);
         slab_destroy_objs(slab, cachep);
-        ////printf("buddy_free partial slab: %p, block_num=%d\n", slab, slab->block_num);
         buddy_free(slab, slab->block_num);
-        ////printf("ZIV SAM");
     }
-    //printf("destroy: freeing full_slabs\n");
-    ////printf("ZIV SAM1");
+
     while(cachep->full_slabs){
         slab = cachep->full_slabs;
         remove_slab_from(&cachep->full_slabs, slab);
         slab_destroy_objs(slab, cachep);
         buddy_free(slab, slab->block_num);
     }
-    ////printf("ZIV SAM2");
-    //printf("destroy: acquiring cache_list_lock\n");
+
     acquire(&cache_list_lock);
-    //printf("destroy: removing from cache list\n");
 
     kmem_cache_t **pp = &cache_list;
     while (*pp && *pp != cachep)
@@ -467,21 +443,15 @@ void kmem_cache_destroy(kmem_cache_t *cachep)
     if(!(*pp)){
         cachep->error_flags = FREE_ERROR;
         release(&cache_list_lock);
-        //panic("kmem_cache_destroy: cache not in cache list");
         return;
     }
 
     *pp = cachep->next;
 
-    //printf("destroy: releasing cache_list_lock\n");
     release(&cache_list_lock);
-    //printf("destroy: setting valid_cache=FALSE\n");
     cachep->valid_cache = FALSE;
-    //printf("destroy: releasing lock\n");
     release(&cachep->lock);
-    //printf("destroy: buddy_free cachep=%p\n", cachep);
     buddy_free(cachep, 1);
-    //printf("destroy: done\n");
 }
 
 void kmem_cache_info(kmem_cache_t *cachep)
@@ -522,7 +492,6 @@ void kmem_cache_info(kmem_cache_t *cachep)
            "SLAB NUM: %d\n"
            "OBJECTS PER SLAB: %d\n"
            "UTILIZED: %u.%u%% OF CACHE CAPACITY\n",
-           //"utilized: %u, total: %u\n\n",
            name,
            (int)obj_size,
            block_num,
@@ -530,8 +499,6 @@ void kmem_cache_info(kmem_cache_t *cachep)
            objs_per_slab,
            fullness/100,
            fullness%100);
-           //utilized,
-           //total_objects);
 
     release(&cachep->lock);
 }

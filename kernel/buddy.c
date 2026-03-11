@@ -34,19 +34,11 @@ int log2(int block_num){
 
 void buddy_init(void *space, int block_num)
 {
-    if(block_num < 1)
-    {
-        //panic("buddy_allocator_init: num of blocks 0 or smaller");
-        return;
-    }
+    if(block_num < 1) return;
 
     int max_order = log2(block_num);
 
-    if(max_order > MAX_ALLOC_ORDER)
-    {
-        //panic("buddy_allocator_init: num of blocks too big");
-        return;
-    }
+    if(max_order > MAX_ALLOC_ORDER) return;
 
     initlock(&buddy.lock, "buddy_lock");
     buddy.base_addr = space;
@@ -63,7 +55,6 @@ void buddy_init(void *space, int block_num)
         while(1 << order > remaining)
             order--;
 
-        // add new block to list
         curr->next = buddy.free_block_lists[order];
         buddy.free_block_lists[order] = curr;
 
@@ -87,26 +78,14 @@ static void *calculate_buddy_addr(void *block, int block_num){
     return buddy.base_addr + buddy_index*BLOCK_SIZE;
 }
 
-/*static void *calculate_parent_addr(void *block, int order){
-    uint64 block_size = (uint64)(1 << order) * BLOCK_SIZE;
-    uint64 parent_size = block_size * 2;
-    uint64 addr = (uint64)block;
-    return (void*)(addr & ~(parent_size - 1));
-}*/
-
 void* buddy_alloc(int block_num)
 {
-    if(block_num < 1)
-    {
-        //panic("buddy_alloc: block_num smaller than 1");
-        return 0;
-    }
+    if(block_num < 1) return 0;
 
     acquire(&buddy.lock);
     int min_order = calculate_min_order(block_num);
     if(min_order < 0) {
         release(&buddy.lock);
-        //panic("buddy_alloc: block_num too big for allocated mem");
         return 0;
     }
 
@@ -114,7 +93,6 @@ void* buddy_alloc(int block_num)
     while(order <= buddy.max_order && !buddy.free_block_lists[order]) order++; // find the lowest free order
     if(order > buddy.max_order) {
         release(&buddy.lock);
-        //panic("buddy_alloc: buddy full");
         return 0;
     }
 
